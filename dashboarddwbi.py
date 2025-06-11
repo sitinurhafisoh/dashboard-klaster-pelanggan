@@ -7,8 +7,17 @@ from sklearn.metrics import mean_squared_error, r2_score
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-st.set_page_config(layout="wide")
-st.title("Dashboard Data Mining: Clustering & Regression")
+# Set tampilan awal
+st.set_page_config(layout="wide", page_title="📊 Dashboard Data Mining", page_icon="📈")
+
+# Judul Dashboard
+st.title("📊 Dashboard Data Mining: Clustering & Regression 🚀")
+
+# Deskripsi singkat
+st.markdown("""
+Selamat datang di dashboard interaktif untuk analisis data layanan menggunakan **metode Clustering (KMeans)** dan **Regresi Linear**.  
+Dashboard ini bertujuan untuk membantu memahami pola layanan berdasarkan **frekuensi pemakaian dan total pendapatan**.
+""")
 
 # Load data
 df = pd.read_csv("fact_servicerevenue_neww.csv")
@@ -34,28 +43,36 @@ mse = mean_squared_error(y, df_grouped["Predicted"])
 r2 = r2_score(y, df_grouped["Predicted"])
 
 # Sidebar filter
+st.sidebar.image("https://img.icons8.com/color/96/analytics.png", width=80)
+st.sidebar.title("⚙️ Filter")
 selected = st.sidebar.multiselect("Pilih Layanan", df_grouped["Nama Layanan"].unique(), default=df_grouped["Nama Layanan"].unique())
 filtered_df = df_grouped[df_grouped["Nama Layanan"].isin(selected)]
 
 # Plot Clustering
-st.subheader("Clustering Layanan Berdasarkan Service & Pendapatan")
+st.subheader("🎯 Clustering Layanan Berdasarkan Service & Pendapatan")
 fig1, ax1 = plt.subplots()
 sns.scatterplot(data=filtered_df, x="Total Service", y="Total Pendapatan", hue="Cluster", palette="Set2", s=100, ax=ax1)
+plt.xlabel("Total Service")
+plt.ylabel("Total Pendapatan")
+plt.title("Visualisasi Clustering")
 st.pyplot(fig1)
 
 # Plot Regression
-st.subheader("Regresi Linear: Total Service vs Pendapatan")
+st.subheader("📈 Regresi Linear: Total Service vs Pendapatan")
 fig2, ax2 = plt.subplots()
 sns.regplot(data=filtered_df, x="Total Service", y="Total Pendapatan", line_kws={"color": "red"}, ax=ax2)
+plt.xlabel("Total Service")
+plt.ylabel("Total Pendapatan")
+plt.title("Visualisasi Regresi Linear")
 st.pyplot(fig2)
 
 # Evaluasi Model
-st.subheader("Evaluasi Regresi")
+st.subheader("🧪 Evaluasi Model Regresi")
 st.markdown(f"""
-- **Mean Squared Error (MSE)**: `{mse:,.2f}`
-- **R-squared Score (R²)**: `{r2:.4f}`
+- 🔢 **Mean Squared Error (MSE)**: `{mse:,.2f}`
+- 📊 **R-squared Score (R²)**: `{r2:.4f}`
 """)
 
-st.subheader("Data Akhir")
+# Data Tabel Akhir
+st.subheader("📋 Data Akhir (Hasil Clustering & Prediksi)")
 st.dataframe(filtered_df)
-
