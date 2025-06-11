@@ -1,91 +1,61 @@
-import streamlit as st
 import pandas as pd
-import plotly.express as px
-from sklearn.preprocessing import StandardScaler
+import streamlit as st
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, r2_score
+import seaborn as sns
+import matplotlib.pyplot as plt
 
-# Judul Aplikasi
-st.title("📊 Dashboard Analisis Layanan dan Pelanggan Salon")
+st.set_page_config(layout="wide")
+st.title("Dashboard Data Mining: Clustering & Regression")
 
-# Upload file CSV
-uploaded_file = st.file_uploader("Upload file: fact_servicerevenue_new.csv", type="csv")
+# Load data
+df = pd.read_csv("fact_servicerevenue_neww.csv")
+df_selected = df[["Nama Layanan", "Total Service", "Total Pendapatan"]]
+df_grouped = df_selected.groupby("Nama Layanan").agg({
+    "Total Service": "sum",
+    "Total Pendapatan": "sum"
+}).reset_index()
 
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
+# Clustering
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(df_grouped[["Total Service", "Total Pendapatan"]])
+kmeans = KMeans(n_clusters=3, random_state=42, n_init='auto')
+df_grouped["Cluster"] = kmeans.fit_predict(X_scaled)
 
-    st.subheader("🧼 Data Asli")
-    st.dataframe(df.head())
+# Regression
+X = df_grouped[["Total Service"]]
+y = df_grouped["Total Pendapatan"]
+reg = LinearRegression()
+reg.fit(X, y)
+df_grouped["Predicted"] = reg.predict(X)
+mse = mean_squared_error(y, df_grouped["Predicted"])
+r2 = r2_score(y, df_grouped["Predicted"])
 
-    # ==============================
-    # 📌 BAGIAN 1: Analisis Layanan Paling Laku
-    # ==============================
-    st.header("🔥 Analisis Layanan Paling Laku (Berdasarkan Total Service)")
+# Sidebar filter
+selected = st.sidebar.multiselect("Pilih Layanan", df_grouped["Nama Layanan"].unique(), default=df_grouped["Nama Layanan"].unique())
+filtered_df = df_grouped[df_grouped["Nama Layanan"].isin(selected)]
 
-    st.markdown("""
-    Tujuan analisis ini adalah mengetahui layanan **yang paling sering digunakan pelanggan**, sebagai dasar untuk:
-    - Strategi promosi
-    - Pengembangan layanan serupa
-    - Pengalokasian sumber daya salon
-    """)
+# Plot Clustering
+st.subheader("Clustering Layanan Berdasarkan Service & Pendapatan")
+fig1, ax1 = plt.subplots()
+sns.scatterplot(data=filtered_df, x="Total Service", y="Total Pendapatan", hue="Cluster", palette="Set2", s=100, ax=ax1)
+st.pyplot(fig1)
 
-    top_services = df.groupby('Nama Layanan')['Total Service'].sum().reset_index()
-    top_services = top_services.sort_values(by='Total Service', ascending=False)
+# Plot Regression
+st.subheader("Regresi Linear: Total Service vs Pendapatan")
+fig2, ax2 = plt.subplots()
+sns.regplot(data=filtered_df, x="Total Service", y="Total Pendapatan", line_kws={"color": "red"}, ax=ax2)
+st.pyplot(fig2)
 
-    st.subheader("🏆 Tabel Layanan Terlaris")
-    st.dataframe(top_services.head(10).reset_index(drop=True))
+# Evaluasi Model
+st.subheader("Evaluasi Regresi")
+st.markdown(f"""
+- **Mean Squared Error (MSE)**: `{mse:,.2f}`
+- **R-squared Score (R²)**: `{r2:.4f}`
+""")
 
-    st.subheader("📊 Visualisasi: Total Service per Layanan")
-    fig2 = px.bar(
-        top_services.sort_values(by='Total Service'),
-        x='Total Service',
-        y='Nama Layanan',
-        orientation='h',
-        title='Top Layanan Berdasarkan Jumlah Digunakan',
-        color='Total Service',
-        color_continuous_scale='Blues'
-    )
-    st.plotly_chart(fig2)
+st.subheader("Data Akhir")
+st.dataframe(filtered_df)
 
-    # ==============================
-    # 📌 BAGIAN 2: Clustering Pelanggan
-    # ==============================
-    st.header("👥 Clustering Pelanggan Berdasarkan Preferensi")
-
-    customer_summary = df.groupby('ID Pelanggan').agg({
-        'Total Pendapatan': 'sum',
-        'Total Service': 'sum',
-        'Harga (IDR)': 'mean'
-    }).reset_index()
-    customer_summary.columns = ['ID Pelanggan', 'Total Pendapatan', 'Total Service', 'Rata-rata Harga Layanan']
-
-    scaler = StandardScaler()
-    features = customer_summary[['Total Pendapatan', 'Total Service', 'Rata-rata Harga Layanan']]
-    scaled_features = scaler.fit_transform(features)
-
-    kmeans = KMeans(n_clusters=3, random_state=42)
-    customer_summary['Cluster'] = kmeans.fit_predict(scaled_features)
-    silhouette = silhouette_score(scaled_features, customer_summary['Cluster'])
-
-    st.markdown(f"**✅ Silhouette Score:** `{silhouette:.2f}` (Semakin mendekati 1, semakin baik pemisahan klasternya)")
-
-    fig = px.scatter_3d(
-        customer_summary,
-        x='Total Pendapatan',
-        y='Total Service',
-        z='Rata-rata Harga Layanan',
-        color='Cluster',
-        hover_data=['ID Pelanggan'],
-        title='Visualisasi Clustering Pelanggan'
-    )
-    st.plotly_chart(fig)
-
-    st.subheader("📊 Rata-rata Setiap Fitur per Cluster")
-    st.dataframe(
-        customer_summary.groupby('Cluster')[['Total Pendapatan', 'Total Service', 'Rata-rata Harga Layanan']]
-        .mean()
-        .round(2)
-    )
-
-else:
-    st.info("Silakan upload file CSV untuk memulai analisis.")
