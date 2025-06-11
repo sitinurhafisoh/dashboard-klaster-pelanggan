@@ -20,7 +20,7 @@ Dashboard ini bertujuan untuk membantu memahami pola layanan berdasarkan **freku
 """)
 
 # Load data
-df = pd.read_csv("fact_servicerevenue_neww.csv")
+df = pd.read_excel("fact_servicerevenue_neww.xlsx")
 df_selected = df[["Nama Layanan", "Total Service", "Total Pendapatan"]]
 df_grouped = df_selected.groupby("Nama Layanan").agg({
     "Total Service": "sum",
