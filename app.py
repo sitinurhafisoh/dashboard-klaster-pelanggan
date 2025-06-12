@@ -57,14 +57,6 @@ st.sidebar.title("⚙️ Filter")
 selected = st.sidebar.multiselect("Pilih Layanan", df_grouped["Nama Layanan"].unique(), default=df_grouped["Nama Layanan"].unique())
 filtered_df = df_grouped[df_grouped["Nama Layanan"].isin(selected)]
 
-# === TAMBAHAN VISUALISASI UNTUK MENUNJANG OBJECTIVE ===
-
-# Tabel Top 3 Layanan
-st.subheader("🥇 Top 3 Layanan Berdasarkan Jumlah Pemakaian")
-top3_df = top_services.head(3).copy()
-top3_df["% dari Total"] = (top3_df["Total Service"] / top3_df["Total Service"].sum()) * 100
-st.dataframe(top3_df[["Nama Layanan", "Total Service", "% dari Total"]])
-
 # Plot Clustering
 st.subheader("🎯 Clustering Layanan Berdasarkan Service & Pendapatan")
 fig1, ax1 = plt.subplots()
