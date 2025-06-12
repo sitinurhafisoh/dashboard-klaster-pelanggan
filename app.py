@@ -57,6 +57,26 @@ st.sidebar.title("⚙️ Filter")
 selected = st.sidebar.multiselect("Pilih Layanan", df_grouped["Nama Layanan"].unique(), default=df_grouped["Nama Layanan"].unique())
 filtered_df = df_grouped[df_grouped["Nama Layanan"].isin(selected)]
 
+# === VISUALISASI TAMBAHAN UNTUK TOP LAYANAN BERDASARKAN SERVICE & PENDAPATAN ===
+
+st.subheader("🏅 Top 5 Layanan Berdasarkan Total Service (Jumlah Pemakaian)")
+top_by_service = filtered_df.sort_values(by="Total Service", ascending=False).head(5)
+st.dataframe(top_by_service[["Nama Layanan", "Total Service", "Total Pendapatan"]])
+
+st.subheader("💰 Top 5 Layanan Berdasarkan Total Pendapatan")
+top_by_revenue = filtered_df.sort_values(by="Total Pendapatan", ascending=False).head(5)
+st.dataframe(top_by_revenue[["Nama Layanan", "Total Service", "Total Pendapatan"]])
+
+# Komparasi dua metrik dalam satu tabel
+st.subheader("📊 Komparasi Layanan: Top Berdasarkan Service & Pendapatan")
+# Gabungkan keduanya untuk melihat duplikat/top intersect
+combined_top = pd.concat([top_by_service, top_by_revenue]).drop_duplicates(subset="Nama Layanan")
+combined_top = combined_top.sort_values(by="Total Pendapatan", ascending=False)
+combined_top["% dari Total Service"] = (combined_top["Total Service"] / filtered_df["Total Service"].sum()) * 100
+combined_top["% dari Total Pendapatan"] = (combined_top["Total Pendapatan"] / filtered_df["Total Pendapatan"].sum()) * 100
+st.dataframe(combined_top[["Nama Layanan", "Total Service", "Total Pendapatan", "% dari Total Service", "% dari Total Pendapatan"]])
+
+
 # Plot Clustering
 st.subheader("🎯 Clustering Layanan Berdasarkan Service & Pendapatan")
 fig1, ax1 = plt.subplots()
