@@ -59,24 +59,6 @@ filtered_df = df_grouped[df_grouped["Nama Layanan"].isin(selected)]
 
 # === TAMBAHAN VISUALISASI UNTUK MENUNJANG OBJECTIVE ===
 
-# Bar Chart: Top Layanan Berdasarkan Total Service
-st.subheader("🏆 Layanan Terlaris (Berdasarkan Total Service)")
-top_services = df_grouped.sort_values(by="Total Service", ascending=False)
-
-fig3, ax3 = plt.subplots(figsize=(10, 6))
-sns.barplot(data=top_services, x="Total Service", y="Nama Layanan", palette="Blues_d", ax=ax3)
-ax3.set_title("Top Layanan berdasarkan Jumlah Pemakaian")
-ax3.set_xlabel("Total Service")
-ax3.set_ylabel("Nama Layanan")
-st.pyplot(fig3)
-
-# Pie Chart: Persentase Penggunaan Layanan
-st.subheader("🧩 Proporsi Penggunaan Tiap Layanan")
-fig4, ax4 = plt.subplots()
-ax4.pie(top_services["Total Service"], labels=top_services["Nama Layanan"], autopct="%1.1f%%", startangle=140)
-ax4.axis("equal")
-st.pyplot(fig4)
-
 # Tabel Top 3 Layanan
 st.subheader("🥇 Top 3 Layanan Berdasarkan Jumlah Pemakaian")
 top3_df = top_services.head(3).copy()
